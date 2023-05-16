@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
+using Microsoft.EntityFrameworkCore;
+using Stocks.Data;
 using Stocks.Web.Data;
 
 namespace Stocks.Web
@@ -9,6 +11,15 @@ namespace Stocks.Web
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
+
+            var connectionString = builder.Configuration.GetConnectionString( "DefaultConnection" ) ?? throw new InvalidOperationException( "Connection string 'DefaultConnection' not found." );
+            builder.Services.AddDbContext<StocksContext>( options =>
+            {
+                options.UseSqlServer( connectionString );
+                options.UseQueryTrackingBehavior( QueryTrackingBehavior.NoTracking );
+            } );
+            builder.Services.AddDbContextFactory<StocksContext>( options => options.UseSqlServer( connectionString ), ServiceLifetime.Transient );
+
 
             // Add services to the container.
             builder.Services.AddRazorPages();

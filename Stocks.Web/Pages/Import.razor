@@ -1,0 +1,71 @@
+﻿@page "/import"
+@using Stocks.Data.Services
+@using Stocks.Data.Entities
+
+<h3>Import</h3>
+
+<button class="btn btn-outline-primary" @onclick="StartImport">Start</button>
+
+@code {
+
+    private void StartImport( )
+    {
+        var bedrijfsInfo = @"D:\StockData\symbols_valid_meta.csv";
+        var folderStocks = @"D:\StockData\stocks\";
+
+        var companies = new List<Company>( );
+
+        using StreamReader readerSymbols = new StreamReader(bedrijfsInfo);
+        while( readerSymbols.ReadLine( ) is {} line )
+        {
+            companies.Add( ExtractSymbolAndName( line ) );
+        }
+
+        foreach(var company in companies )
+        {
+            var fileName = $"{folderStocks}{company.Symbol}.csv";
+            if( File.Exists( fileName ) )
+            {
+                using StreamReader readerStocks = new StreamReader( fileName );
+
+                while (readerStocks.ReadLine() is { } line)
+                {
+                    
+                }
+            }
+        }
+
+    }
+
+    private Company ExtractSymbolAndName(string line)
+    {
+        //           1         2  
+        // 012345678901234567890
+        // Y,ZFGN,"Zafgen, Inc. - Common Stock",Q,Q,N,100.0,N,N,,ZFGN,N
+        // Y,ZDEU,SPDR Solactive Germany ETF,P, ,Y,100.0,N,,ZDEU,ZDEU,N
+
+        var lastCommaPositionSymbol = line.IndexOf( ',', 2 );
+        var symbol = line.Substring( 2, lastCommaPositionSymbol - 2 );
+        var isNameWithQuotes = line.Substring( lastCommaPositionSymbol + 1, 1 ) == "\"";
+
+        var name = string.Empty;
+        if( isNameWithQuotes )
+        {
+            // zoek afsluitende quote
+            var closingQuote = line.IndexOf( '\"', lastCommaPositionSymbol + 2 );
+            name = line.Substring( lastCommaPositionSymbol + 2, closingQuote - ( lastCommaPositionSymbol + 2 ) );
+        }
+        else
+        {
+            var closingComma = line.IndexOf( ',', lastCommaPositionSymbol + 2 );
+            name = line.Substring(lastCommaPositionSymbol + 1, closingComma - (lastCommaPositionSymbol + 1));
+        }
+
+        return new Company( ) { Name = name, Symbol = symbol };
+    }
+
+    private DayPrice ExtractDayPrices( string line )
+    {
+        return new DayPrice( );
+    }
+}
